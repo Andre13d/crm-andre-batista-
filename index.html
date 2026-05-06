@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e14">
+<title>CRM — André Batista Corretor</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22CRM%20Andr%C3%A9%20Batista%22%2C%22short_name%22%3A%22CRM%20AB%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0e14%22%2C%22theme_color%22%3A%22%2300c4ff%22%7D">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg2: #111720;
+    --bg3: #1a2332;
+    --surface: #1e2d3d;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #00c4ff;
+    --accent2: #0099cc;
+    --green: #00e676;
+    --amber: #ffab40;
+    --red: #ff5252;
+    --purple: #b388ff;
+    --text: #e8f0fe;
+    --muted: #7a9bb5;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,196,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,196,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: rgba(10,14,20,0.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-weight: 800; font-size: 13px;
+    color: #000; letter-spacing: -0.5px; flex-shrink: 0;
+  }
+  .logo-text { font-family: var(--font-head); font-weight: 700; font-size: 14px; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 10px; color: var(--muted); font-weight: 300; display: block; margin-top: -2px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .badge-mcmv {
+    background: rgba(0,196,255,0.1); border: 1px solid rgba(0,196,255,0.25);
+    color: var(--accent); font-size: 9px; font-weight: 500;
+    padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .sync-btn {
+    background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.25);
+    color: var(--green); font-size: 9px; font-weight: 500;
+    padding: 2px 8px; border-radius: 20px; cursor: pointer;
+    font-family: var(--font-body); letter-spacing: 0.3px;
+    transition: all 0.2s;
+  }
+  .sync-btn:hover { background: rgba(0,230,118,0.2); }
+  .sync-btn.syncing { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* TABS */
+  .tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+    background: var(--bg2); overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 10px 16px; font-size: 12px; font-weight: 500;
+    color: var(--muted); background: transparent; border: none;
+    cursor: pointer; font-family: var(--font-body); white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN */
+  main { flex: 1; padding: 16px 16px; }
+
+  /* STATS */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.blue::before { background: var(--accent); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.purple::before { background: var(--purple); }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-head); font-size: 24px; font-weight: 700; }
+  .stat-card.blue .stat-value { color: var(--accent); }
+  .stat-card.green .stat-value { color: var(--green); }
+  .stat-card.amber .stat-value { color: var(--amber); }
+  .stat-card.purple .stat-value { color: var(--purple); }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; gap: 8px; flex-wrap: wrap;
+  }
+  .toolbar-left { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .filter-select {
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: 12px;
+    padding: 7px 10px; border-radius: 8px; outline: none; cursor: pointer;
+    flex: 1; min-width: 120px;
+  }
+  .btn-primary {
+    background: var(--accent); color: #000; border: none;
+    font-family: var(--font-body); font-weight: 600; font-size: 13px;
+    padding: 9px 14px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-family: var(--font-body); font-size: 12px;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+  }
+
+  /* KANBAN */
+  .kanban-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px 16px; }
+  .kanban {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(220px, 1fr));
+    gap: 10px; align-items: start; min-width: 1380px;
+  }
+  .kanban-col {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .col-header {
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--bg2); z-index: 1;
+  }
+  .col-title { font-family: var(--font-head); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+  .col-badge {
+    background: rgba(255,255,255,0.06); border-radius: 20px;
+    font-size: 10px; font-weight: 500; padding: 1px 7px; color: var(--muted);
+  }
+  .col-body { padding: 8px; display: flex; flex-direction: column; gap: 7px; min-height: 120px; }
+  .lead-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px; cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lead-card:active { border-color: var(--border2); }
+  .lead-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; border-radius: 10px 0 0 10px;
+  }
+  .lead-card.hot::before { background: var(--green); }
+  .lead-card.warm::before { background: var(--amber); }
+  .lead-card.cold::before { background: var(--muted); }
+  .lead-name { font-weight: 500; font-size: 13px; margin-bottom: 5px; padding-left: 2px; display: flex; align-items: center; gap: 5px; }
+  .lead-meta { font-size: 11px; color: var(--muted); line-height: 1.7; padding-left: 2px; }
+  .lead-meta span { display: block; }
+  .lead-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; padding-left: 2px; }
+  .tag { font-size: 10px; padding: 1px 7px; border-radius: 20px; font-weight: 500; }
+  .tag-origem { background: rgba(0,196,255,0.1); color: var(--accent); border: 1px solid rgba(0,196,255,0.15); }
+  .tag-followup { background: rgba(255,171,64,0.1); color: var(--amber); border: 1px solid rgba(255,171,64,0.15); }
+  .lead-actions { display: flex; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
+  .btn-xs {
+    font-size: 10px; padding: 3px 7px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); cursor: pointer; font-family: var(--font-body);
+    white-space: nowrap; text-decoration: none; display: inline-block;
+  }
+  .btn-xs.zap { color: #25D366; border-color: rgba(37,211,102,0.25); }
+  .empty-state { text-align: center; padding: 20px 8px; color: var(--muted); font-size: 11px; opacity: 0.6; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot.hot { background: var(--green); }
+  .dot.warm { background: var(--amber); }
+  .dot.cold { background: var(--muted); }
+
+  /* LIST VIEW */
+  .list-view { display: none; flex-direction: column; gap: 8px; }
+  .list-lead {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; cursor: pointer;
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 8px; align-items: center;
+  }
+  .list-lead:active { border-color: var(--border2); }
+  .list-left { display: flex; align-items: center; gap: 10px; }
+  .list-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .list-dot.hot { background: var(--green); }
+  .list-dot.warm { background: var(--amber); }
+  .list-dot.cold { background: var(--muted); }
+  .list-name { font-weight: 500; font-size: 14px; }
+  .list-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .list-right { text-align: right; }
+  .list-stage { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; display: inline-block; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200; align-items: flex-end; justify-content: center;
+    padding: 0;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 32px;
+    width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 4px; margin: 0 auto 16px; }
+  .modal h2 { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 18px; color: var(--accent); }
+  .form-group { margin-bottom: 12px; }
+  .form-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; display: block; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: 15px;
+    padding: 10px 12px; border-radius: 8px; outline: none;
+    -webkit-appearance: none; appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; height: 70px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+
+  /* DETAIL MODAL */
+  .detail-field { margin-bottom: 14px; }
+  .detail-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 3px; }
+  .detail-val { font-size: 14px; color: var(--text); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .move-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+  .btn-move {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--muted);
+    font-size: 11px; padding: 8px 6px; border-radius: 7px; cursor: pointer;
+    font-family: var(--font-body); text-align: center; transition: all 0.15s;
+  }
+  .btn-move:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* SEARCH */
+  .search-bar {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; color: var(--text); font-family: var(--font-body);
+    font-size: 14px; width: 100%; outline: none; margin-bottom: 14px;
+    -webkit-appearance: none;
+  }
+  .search-bar:focus { border-color: var(--accent); }
+  .search-bar::placeholder { color: var(--muted); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(10,14,20,0.97); border-top: 1px solid var(--border);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    padding: 8px 0 env(safe-area-inset-bottom);
+    z-index: 100;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 0; cursor: pointer; background: none; border: none;
+    color: var(--muted); font-family: var(--font-body); font-size: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-btn svg { width: 22px; height: 22px; }
+  .nav-btn.active { color: var(--accent); }
+
+  /* STORAGE STATUS */
+  .storage-banner {
+    background: rgba(0,196,255,0.05); border: 1px solid rgba(0,196,255,0.15);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+    font-size: 12px; color: var(--muted); display: flex;
+    align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .storage-banner span { color: var(--accent); font-weight: 500; }
+
+  @media (min-width: 600px) {
+    .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    .modal { border-radius: 16px; margin-bottom: 20px; }
+  }
+  @media (max-width: 600px) {
+    .bottom-nav { display: grid; }
+    main { padding-bottom: 80px; }
+    .kanban { min-width: 1200px; }
+  }
+  @media (min-width: 900px) {
+    main { padding: 20px 28px; }
+    header { padding: 0 28px; height: 60px; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-mark">AB</div>
+      <div>
+        <span class="logo-text">André Batista</span>
+        <span class="logo-sub">Corretor · Águas Lindas</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge-mcmv">MCMV Faixa 1</span>
+      <button class="sync-btn" id="sync-btn" onclick="saveData()">💾 Salvo</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="storage-info" class="storage-banner" style="display:none">
+      ⚠️ Sem conexão com nuvem — dados salvos <span>localmente neste dispositivo</span>. Para sincronizar entre dispositivos, use o mesmo navegador com a mesma conta.
+    </div>
+
+    <div class="stats-grid" id="stats"></div>
+
+    <input class="search-bar" id="search" placeholder="🔍  Buscar lead por nome, bairro ou observação..." oninput="render()" />
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <select class="filter-select" id="f-temp" onchange="render()">
+          <option value="">Todos os leads</option>
+          <option value="hot">🟢 Quentes</option>
+          <option value="warm">🟡 Mornos</option>
+          <option value="cold">⚫ Frios</option>
+        </select>
+        <select class="filter-select" id="f-origem" onchange="render()">
+          <option value="">Todas origens</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Meta Ads">Meta Ads</option>
+          <option value="Indicação">Indicação</option>
+          <option value="Instagram">Instagram</option>
+        </select>
+        <select class="filter-select" id="f-col" onchange="render()">
+          <option value="">Todas etapas</option>
+          <option value="novo">Novo lead</option>
+          <option value="qualificado">Qualificado</option>
+          <option value="visita">Visita</option>
+          <option value="proposta">Proposta</option>
+          <option value="fechado">Fechado</option>
+          <option value="perdido">Perdido</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="openAddModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo lead
+      </button>
+    </div>
+
+    <div id="view-kanban">
+      <div class="kanban-wrap">
+        <div class="kanban" id="kanban"></div>
+      </div>
+    </div>
+    <div class="list-view" id="view-list"></div>
+  </main>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-kanban" onclick="switchView('kanban')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="11" rx="1"/></svg>
+    Kanban
+  </button>
+  <button class="nav-btn" id="nav-list" onclick="switchView('list')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    Lista
+  </button>
+  <button class="nav-btn" onclick="openAddModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Adicionar
+  </button>
+</nav>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>+ Cadastrar lead</h2>
+    <div class="form-group">
+      <label class="form-label">Nome completo *</label>
+      <input class="form-input" id="i-nome" placeholder="Ex: Maria da Silva" autocomplete="name" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">WhatsApp</label>
+        <input class="form-input" id="i-tel" placeholder="61 9 9999-9999" type="tel" autocomplete="tel" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Renda familiar</label>
+        <input class="form-input" id="i-renda" placeholder="R$ 2.500" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Temperatura</label>
+        <select class="form-select" id="i-temp">
+          <option value="warm">Morno</option>
+          <option value="hot">Quente</option>
+          <option value="cold">Frio</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Origem</label>
+        <select class="form-select" id="i-origem">
+          <option value="WhatsApp">Grupo WhatsApp</option>
+          <option value="Meta Ads">Meta Ads</option>
+          <option value="Indicação">Indicação</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Próximo follow-up</label>
+        <input class="form-input" id="i-followup" placeholder="Ex: 09/05" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bairro / Região</label>
+        <input class="form-input" id="i-bairro" placeholder="Jardim Ingá..." />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observações</label>
+      <textarea class="form-textarea" id="i-obs" placeholder="Nome sujo? Trabalha informal? Usa FGTS? Urgência?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('add-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="addLead()">Salvar lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="d-nome"></h2>
+    <div class="detail-grid">
+      <div class="detail-field"><div class="detail-label">WhatsApp</div><div class="detail-val" id="d-tel"></div></div>
+      <div class="detail-field"><div class="detail-label">Renda</div><div class="detail-val" id="d-renda"></div></div>
+      <div class="detail-field"><div class="detail-label">Origem</div><div class="detail-val" id="d-origem"></div></div>
+      <div class="detail-field"><div class="detail-label">Follow-up</div><div class="detail-val" id="d-followup"></div></div>
+      <div class="detail-field"><div class="detail-label">Bairro</div><div class="detail-val" id="d-bairro"></div></div>
+      <div class="detail-field"><div class="detail-label">Temperatura</div><div class="detail-val" id="d-temp"></div></div>
+    </div>
+    <div class="detail-field">
+      <div class="detail-label">Observações</div>
+      <div class="detail-val" id="d-obs" style="color:var(--muted);font-size:13px;line-height:1.6;"></div>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+      <div class="detail-label" style="margin-bottom:6px;">Mover para etapa</div>
+      <div class="move-grid" id="d-move"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" style="color:var(--red);border-color:rgba(255,82,82,0.3);" onclick="deleteLead()">🗑 Remover</button>
+      <button class="btn-ghost" id="d-zap">WhatsApp</button>
+      <button class="btn-ghost" onclick="closeModal('detail-modal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLS = [
+  { id: 'novo', label: 'Novo lead', color: '#7a9bb5' },
+  { id: 'qualificado', label: 'Qualificado', color: '#00c4ff' },
+  { id: 'visita', label: 'Visita', color: '#ffab40' },
+  { id: 'proposta', label: 'Proposta', color: '#b388ff' },
+  { id: 'fechado', label: 'Fechado', color: '#00e676' },
+  { id: 'perdido', label: 'Perdido', color: '#ff5252' },
+];
+
+const SAMPLE = [
+  { id: 1, nome: 'Maria Silva', tel: '61991234567', renda: 'R$ 2.800', temp: 'hot', origem: 'Indicação', followup: '07/05', bairro: 'Jardim Ingá', obs: 'Quer sair do aluguel urgente. Marido tem CLT. Tem FGTS disponível.', col: 'qualificado' },
+  { id: 2, nome: 'João Ferreira', tel: '61998765432', renda: 'R$ 1.900', temp: 'warm', origem: 'WhatsApp', followup: '09/05', bairro: 'Parque da Barragem', obs: 'Nome estava sujo. Regularizou recentemente. Trabalho informal.', col: 'novo' },
+  { id: 3, nome: 'Ana Souza', tel: '61993334455', renda: 'R$ 3.200', temp: 'hot', origem: 'Meta Ads', followup: '08/05', bairro: 'Águas Lindas Centro', obs: 'Visita confirmada para sábado de manhã. Muito motivada.', col: 'visita' },
+  { id: 4, nome: 'Carlos Oliveira', tel: '61994445566', renda: 'R$ 2.100', temp: 'cold', origem: 'Instagram', followup: '15/05', bairro: 'Mansões Paraíso', obs: 'Ainda indeciso. Recontatar em 2 semanas.', col: 'novo' },
+];
+
+const STORAGE_KEY = 'crm_ab_leads_v2';
+let leads = [];
+let nextId = 1;
+let selectedId = null;
+let currentView = 'kanban';
+let storageAvailable = false;
+
+// Storage with persistence
+async function initStorage() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY);
+    if (result && result.value) {
+      leads = JSON.parse(result.value);
+      nextId = Math.max(...leads.map(l => l.id), 0) + 1;
+      storageAvailable = true;
+      document.getElementById('sync-btn').textContent = '☁️ Nuvem';
+      document.getElementById('sync-btn').style.color = '#00c4ff';
+      document.getElementById('sync-btn').style.borderColor = 'rgba(0,196,255,0.25)';
+      document.getElementById('sync-btn').style.background = 'rgba(0,196,255,0.1)';
+    } else {
+      leads = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || SAMPLE;
+      nextId = Math.max(...leads.map(l => l.id), 0) + 1;
+    }
+  } catch(e) {
+    leads = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || SAMPLE;
+    nextId = Math.max(...leads.map(l => l.id), 0) + 1;
+    document.getElementById('storage-info').style.display = 'flex';
+  }
+  render();
+}
+
+async function saveData() {
+  const btn = document.getElementById('sync-btn');
+  btn.textContent = '⏳ Salvando...';
+  btn.classList.add('syncing');
+  try {
+    if (window.storage) {
+      await window.storage.set(STORAGE_KEY, JSON.stringify(leads));
+      btn.textContent = '☁️ Salvo';
+      btn.classList.remove('syncing');
+    }
+  } catch(e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(leads)); } catch(e2) {}
+  setTimeout(() => { btn.classList.remove('syncing'); }, 1000);
+}
+
+function save() {
+  saveData();
+}
+
+function openAddModal() { document.getElementById('add-modal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+}));
+
+function addLead() {
+  const nome = document.getElementById('i-nome').value.trim();
+  if (!nome) { alert('Informe o nome do lead.'); return; }
+  leads.push({
+    id: nextId++, nome,
+    tel: document.getElementById('i-tel').value.trim(),
+    renda: document.getElementById('i-renda').value.trim(),
+    temp: document.getElementById('i-temp').value,
+    origem: document.getElementById('i-origem').value,
+    followup: document.getElementById('i-followup').value.trim(),
+    bairro: document.getElementById('i-bairro').value.trim(),
+    obs: document.getElementById('i-obs').value.trim(),
+    col: 'novo',
+    createdAt: new Date().toISOString()
+  });
+  save();
+  ['i-nome','i-tel','i-renda','i-followup','i-bairro','i-obs'].forEach(id => document.getElementById(id).value = '');
+  closeModal('add-modal');
+  render();
+}
+
+function openDetail(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  selectedId = id;
+  document.getElementById('d-nome').textContent = l.nome;
+  document.getElementById('d-tel').textContent = l.tel || '—';
+  document.getElementById('d-renda').textContent = l.renda || '—';
+  document.getElementById('d-origem').textContent = l.origem || '—';
+  document.getElementById('d-followup').textContent = l.followup || '—';
+  document.getElementById('d-bairro').textContent = l.bairro || '—';
+  document.getElementById('d-temp').textContent = l.temp === 'hot' ? '🟢 Quente' : l.temp === 'warm' ? '🟡 Morno' : '⚫ Frio';
+  document.getElementById('d-obs').textContent = l.obs || '—';
+  const zap = document.getElementById('d-zap');
+  const clean = (l.tel || '').replace(/\D/g,'');
+  if (clean) {
+    zap.onclick = () => window.open('https://wa.me/55' + clean, '_blank');
+    zap.style.color = '#25D366'; zap.style.borderColor = 'rgba(37,211,102,0.3)';
+  } else { zap.onclick = null; zap.style.color = ''; zap.style.borderColor = ''; }
+  const moveGrid = document.getElementById('d-move');
+  moveGrid.innerHTML = COLS.filter(c => c.id !== l.col).map(c =>
+    `<button class="btn-move" onclick="moveLead('${c.id}')">${c.label}</button>`
+  ).join('');
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function moveLead(newCol) {
+  const l = leads.find(x => x.id === selectedId);
+  if (l) { l.col = newCol; save(); render(); closeModal('detail-modal'); }
+}
+
+function deleteLead() {
+  if (!confirm('Remover este lead?')) return;
+  leads = leads.filter(x => x.id !== selectedId);
+  save(); render(); closeModal('detail-modal');
+}
+
+function switchView(view) {
+  currentView = view;
+  document.getElementById('view-kanban').style.display = view === 'kanban' ? 'block' : 'none';
+  document.getElementById('view-list').style.display = view === 'list' ? 'flex' : 'none';
+  document.getElementById('nav-kanban').classList.toggle('active', view === 'kanban');
+  document.getElementById('nav-list').classList.toggle('active', view === 'list');
+  render();
+}
+
+function getFiltered() {
+  const ft = document.getElementById('f-temp').value;
+  const fo = document.getElementById('f-origem').value;
+  const fc = document.getElementById('f-col').value;
+  const fs = (document.getElementById('search').value || '').toLowerCase().trim();
+  return leads.filter(l =>
+    (!ft || l.temp === ft) &&
+    (!fo || l.origem === fo) &&
+    (!fc || l.col === fc) &&
+    (!fs || l.nome.toLowerCase().includes(fs) || (l.bairro||'').toLowerCase().includes(fs) || (l.obs||'').toLowerCase().includes(fs))
+  );
+}
+
+function colLabel(id) { return (COLS.find(c=>c.id===id)||{label:id}).label; }
+function colColor(id) { return (COLS.find(c=>c.id===id)||{color:'#7a9bb5'}).color; }
+
+function render() {
+  const vis = getFiltered();
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card blue"><div class="stat-label">Total de leads</div><div class="stat-value">${leads.length}</div></div>
+    <div class="stat-card green"><div class="stat-label">Quentes</div><div class="stat-value">${leads.filter(l=>l.temp==='hot').length}</div></div>
+    <div class="stat-card amber"><div class="stat-label">Visitas</div><div class="stat-value">${leads.filter(l=>l.col==='visita').length}</div></div>
+    <div class="stat-card purple"><div class="stat-label">Fechados</div><div class="stat-value">${leads.filter(l=>l.col==='fechado').length}</div></div>
+  `;
+
+  if (currentView === 'kanban') {
+    document.getElementById('kanban').innerHTML = COLS.map(col => {
+      const colLeads = vis.filter(l => l.col === col.id);
+      return `<div class="kanban-col">
+        <div class="col-header">
+          <span class="col-title" style="color:${col.color}">${col.label}</span>
+          <span class="col-badge">${colLeads.length}</span>
+        </div>
+        <div class="col-body">
+          ${colLeads.length === 0 ? '<div class="empty-state">Nenhum lead</div>' :
+            colLeads.map(l => {
+              const clean = (l.tel||'').replace(/\D/g,'');
+              return `<div class="lead-card ${l.temp}" onclick="openDetail(${l.id})">
+                <div class="lead-name"><span class="dot ${l.temp}"></span>${l.nome}</div>
+                <div class="lead-meta">
+                  ${l.renda ? `<span>${l.renda}/mês</span>` : ''}
+                  ${l.bairro ? `<span>${l.bairro}</span>` : ''}
+                </div>
+                <div class="lead-tags">
+                  ${l.origem ? `<span class="tag tag-origem">${l.origem}</span>` : ''}
+                  ${l.followup ? `<span class="tag tag-followup">📅 ${l.followup}</span>` : ''}
+                </div>
+                ${clean ? `<div class="lead-actions" onclick="event.stopPropagation()">
+                  <a class="btn-xs zap" href="https://wa.me/55${clean}" target="_blank">WhatsApp</a>
+                </div>` : ''}
+              </div>`;
+            }).join('')
+          }
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    const listEl = document.getElementById('view-list');
+    if (vis.length === 0) {
+      listEl.innerHTML = '<div class="empty-state" style="width:100%;padding:40px">Nenhum lead encontrado</div>';
+    } else {
+      listEl.innerHTML = vis.map(l => `
+        <div class="list-lead" onclick="openDetail(${l.id})">
+          <div class="list-left">
+            <span class="list-dot ${l.temp}"></span>
+            <div>
+              <div class="list-name">${l.nome}</div>
+              <div class="list-meta">${[l.bairro, l.renda, l.origem].filter(Boolean).join(' · ')}</div>
+            </div>
+          </div>
+          <div class="list-right">
+            <span class="list-stage" style="background:${colColor(l.col)}22;color:${colColor(l.col)};border:1px solid ${colColor(l.col)}44">${colLabel(l.col)}</span>
+            ${l.followup ? `<div style="font-size:10px;color:var(--amber);margin-top:4px">📅 ${l.followup}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+// Initialize
+if (window.storage) {
+  initStorage();
+} else {
+  leads = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || SAMPLE;
+  nextId = Math.max(...leads.map(l => l.id), 0) + 1;
+  document.getElementById('storage-info').style.display = 'flex';
+  document.getElementById('sync-btn').textContent = '💾 Local';
+  render();
+}
+</script>
+</body>
+</html>
